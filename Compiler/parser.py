@@ -53,6 +53,7 @@ def init_keywords():
 	KEYWORDS['LINE'] = 'LINE'
 	KEYWORDS['END'] = 'END'
 
+
 def print_error(waiting, after):
 	print_in_log("Current Token: " + str(current_token) + ", error: waiting \'" + waiting + "\' after \'" + after + "\'!")
 
@@ -73,6 +74,7 @@ def printer(func):
 		level -= 1
 		return result
 	return wrapper
+
 
 def level_increment(func):
 	def wrapper(*args, **kwargs):
@@ -114,63 +116,94 @@ def runParser(tokens):
 @level_increment
 @printer
 def Program():
+	key = 'Program'
 	result = False
-	if CC():
-		pass
+	tree_full = dict()
+	tree_full[key] = list()
 
+	subtree = CC()
 	if current_token != KEYWORDS["END"]:
-		if II():
-			pass
-		else:
+		subtree = II()
+		if not subtree:
 			print_error("CC or II", "Program")
 			result = False
 
-	if KEY("END"):
+	tree_full[key].append(subtree)
+
+	subtree = KEY("END")
+	if subtree:
+		tree_full[key].append(subtree)
 		if current_token is None:
-			return True
+			result = True
 		else:
 			print_error("string end", "END")
 	else:
 		print_error("END", "CC or II")
 		result = False
+	print tree_full
 	return result
 
 @level_increment
 @printer
 def CC():
-	result = True
-	if comment():
-		if CC():
-			result = True
+	key = 'CC'
+	current_tree = dict()
+	current_tree[key] = list()
+
+	result = list()
+
+	subtree = comment()
+	if subtree:
+		current_tree[key].append(subtree)
+		subtree = CC()
+		if not subtree is None:
+			current_tree[key].append(subtree)
+			result = current_tree
 		else:
 			print_error("CC", "comment")
-			result = False
+			result = None
 
 	return result
 
 @level_increment
 @printer
 def II():
-	result = True
-	if instr():
-		if II():
-			result = True
+	key = 'II'
+	current_tree = dict()
+	current_tree[key] = list()
+	result = list()
+
+	subtree = instr()
+	if subtree:
+		current_tree[key].append(subtree)
+		subtree = II()
+		if not subtree is None:
+			current_tree[key].append(subtree)
+			result = current_tree
 		else:
 			print_error("II", "instr")
-			result = False
+			result = None
 
 	return result
 
 @level_increment
 @printer
 def comment():
-	result = False
-	if semicolon():
-		if string_():
-			return True
+	key = 'comment'
+	current_tree = dict()
+	current_tree[key] = list()
+
+	result = None
+	subtree = semicolon()
+	if subtree:
+		current_tree[key].append(subtree)
+		subtree = string_()
+		if subtree:
+			current_tree[key].append(subtree)
+			result = current_tree
 		else:
 			print_error("string", "semicolumn")
-			result = False
+			result = None
 
 	return result
 
@@ -178,189 +211,263 @@ def comment():
 @printer
 def string_():
 	if current_token is None:
-		return False
+		return None
 	if re.match(re_character, current_token):
+		current_tree = dict()
+		current_tree['comment_string'] = current_token
 		get_next_token()
-		return True
-	return False
+		return current_tree
+	return None
 
 @level_increment
 @printer
 def ident():
 	if current_token is None:
-		return False
+		return None
 	if re.match(re_letter, current_token):
+		current_tree = dict()
+		current_tree['ident'] = current_token
 		get_next_token()
-		return True
-	return False
+		return current_tree
+	return None
 
 @level_increment
 @printer
 def label():
 	if current_token is None:
-		return False
+		return None
 	if re.match(re_label, current_token):
+		current_tree = dict()
+		current_tree['label'] = current_token
 		get_next_token()
-		return True
-	return False
+		return current_tree
+	return None
 
 @level_increment
 @printer
 def posint():
 	if current_token is None:
-		return False
+		return None
 	if re.match(re_digit, current_token):
+		current_tree = dict()
+		current_tree['posint'] = current_token
 		get_next_token()
-		return True
-	return False
+		return current_tree
+	return None
 
 @level_increment
 @printer
 def semicolon():
+	current_tree = dict()
+	current_tree['semicolumn'] = list()
+
 	if current_token is None:
-		return False
+		return None
 
 	if current_token == ";":
 		get_next_token()
-		return True
-	return False
+		current_tree['semicolumn'] = ";"
+		return current_tree
+	return None
 
 @level_increment
 @printer
 def quote():
 	if current_token is None:
-		return False
+		return None
 
 	if current_token == "\'":
+		current_tree = dict()
+		current_tree['quote'] = current_token
 		get_next_token()
-		return True
-	return False
+		return current_tree
+	return None
 
 @level_increment
 @printer
 def colon():
 	if current_token is None:
-		return False
+		return None
 
 	if current_token == ":":
+		current_tree = dict()
+		current_tree['colon'] = current_token
 		get_next_token()
-		return True
-	return False
+		return current_tree
+	return None
 
 @level_increment
 @printer
 def unop():
 	if current_token is None:
-		return False
+		return None
 
 	if re.match(re_unop, current_token):
+		current_tree = dict()
+		current_tree['unop'] = current_token
 		get_next_token()
-		return True
-	return False
+		return current_tree
+	return None
 
 @level_increment
 @printer
 def binop():
 	if current_token is None:
-		return False
+		return None
 
 	if current_token in re_binop:
+		current_tree = dict()
+		current_tree['binop'] = current_token
 		get_next_token()
-		return True
-	return False
+		return current_tree
+	return None
 
 @level_increment
 @printer
 def assignment():
 	if current_token is None:
-		return False
+		return None
 
 	if current_token == ":=":
+		current_tree = dict()
+		current_tree['assignment'] = current_token
 		get_next_token()
-		return True
-	return False
+		return current_tree
+	return None
 
 @level_increment
 @printer
 def lparent():
 	if current_token is None:
-		return False
+		return None
 
 	if current_token == "(":
+		current_tree = dict()
+		current_tree['lparent'] = current_token
 		get_next_token()
-		return True
-	return False
+		return current_tree
+	return None
 
 @level_increment
 @printer
 def rparent():
 	if current_token is None:
-		return False
+		return None
 
 	if current_token == ")":
+		current_tree = dict()
+		current_tree['rparent'] = current_token
 		get_next_token()
-		return True
-	return False
+		return current_tree
+	return None
 
 @level_increment
 @printer
 def instr():
-	result = False
-	if KEY('LET'):
-		if term():
-			if assignment():
-				if R3():
-					result = True
+	current_tree = dict()
+	current_tree['instr'] = list()
+
+	result = None
+	subtree = KEY('LET')
+	if subtree:
+		current_tree['instr'].append(subtree)
+		subtree = term()
+		if subtree:
+			current_tree['instr'].append(subtree)
+			subtree = assignment()
+			if subtree:
+				current_tree['instr'].append(subtree)
+				subtree = R3()
+				if subtree:
+					current_tree['instr'].append(subtree)
+					result = current_tree
 				else:
 					print_error("R3", "assignment")
 			else:
 				print_error("assignment", "term")
 		else:
 			print_error("term", "LET")
-	elif KEY('JUMP'):
-		if ident():
-			if KEY('IF'):
-				if expr():
-					result = True
+	else:
+		subtree = KEY('JUMP')
+		if subtree:
+			current_tree['instr'].append(subtree)
+			subtree = ident()
+			if subtree:
+				current_tree['instr'].append(subtree)
+				subtree = KEY('IF')
+				if subtree:
+					current_tree['instr'].append(subtree)
+					subtree = expr()
+					if subtree:
+						current_tree['instr'].append(subtree)
+						result = current_tree
+					else:
+						print_error("expr", "IF")
 				else:
-					print_error("expr", "IF")
+					print_error("IF", "ident")
 			else:
-				print_error("IF", "ident")
+				print_error("ident", "JUMP")
 		else:
-			print_error("ident", "JUMP")
-	elif KEY('GET'):
-		if term():
-			result = True
-		else:
-			print_error("term", "GET")
-	elif KEY('PUT'):
-		if term():
-			result = True
-		elif quote():
-			if string_():
-				if quote():
-					result = True
+			subtree = KEY('GET')
+			if subtree:
+				current_tree['instr'].append(subtree)
+				subtree = term()
+				if subtree:
+					current_tree['instr'].append(subtree)
+					result = current_tree
 				else:
-					print_error("quote", "string")
+					print_error("term", "GET")
 			else:
-				print_error("string", "quote")
-		else:
-			print_error("term", "GET")
-	elif KEY('LINE'):
-		result = True
-
-	elif label():
-		result = True
+				subtree = KEY('PUT')
+				if subtree:
+					current_tree['instr'].append(subtree)
+					subtree = term()
+					if subtree:
+						current_tree['instr'].append(subtree)
+						result = current_tree
+					else:
+						subtree =  quote()
+						if subtree:
+							current_tree['instr'].append(subtree)
+							subtree = string_()
+							if subtree:
+								current_tree['instr'].append(subtree)
+								subtree = quote()
+								if subtree:
+									current_tree['instr'].append(subtree)
+									result = current_tree
+								else:
+									print_error("quote", "string")
+							else:
+								print_error("string", "quote")
+						else:
+							print_error("term", "GET")
+				else:
+					subtree = KEY('LINE')
+					if subtree:
+						current_tree['instr'].append(subtree)
+						result = current_tree
+					else:
+						subtree = label()
+						if subtree:
+							current_tree['instr'].append(subtree)
+							result = current_tree
 
 	return result
 
 @level_increment
 @printer
 def term():
-	result = False
-	if ident():
-		if R1():
-			result = True
+	current_tree = dict()
+	current_tree['term'] = list()
+	result = None
+	subtree = ident()
+	if subtree:
+		current_tree['term'].append(subtree)
+		subtree = R1()
+		if not subtree is None:
+			current_tree['term'].append(subtree)
+			result = current_tree
 		else:
 			print_error("R1", "ident")
 	return result
@@ -368,66 +475,106 @@ def term():
 @level_increment
 @printer
 def expr():
-	result = False
-	if term():
-		if R2():
-			result = True
+	current_tree = dict()
+	current_tree['expr'] = list()
+	result = None
+
+	subtree = term()
+	if subtree:
+		current_tree['expr'].append(subtree)
+		subtree = R2()
+		if not subtree is None:
+			current_tree['expr'].append(subtree)
+			result = current_tree
 		else:
 			print_error("R2", "term")
-	elif unop():
-		if term():
-			result = True
-		else:
-			print_error("term", "unop")
+	else:
+		subtree = unop()
+		if subtree:
+			current_tree['expr'].append(subtree)
+			subtree = term()
+			if subtree:
+				current_tree['expr'].append(subtree)
+				result = current_tree
+			else:
+				print_error("term", "unop")
 	return result
 
 @level_increment
 @printer
 def R1():
-	result = True
-	if lparent():
-		if ident():
-			if rparent():
-				result = True
+	current_tree = dict()
+	current_tree['R1'] = list()
+	result = list()
+
+	subtree = lparent()
+
+	if subtree:
+		current_tree['R1'].append(subtree)
+		subtree = ident()
+		if subtree:
+			current_tree['R1'].append(subtree)
+			subtree = rparent()
+			if subtree:
+				current_tree['R1'].append(subtree)
+				result = current_tree
 			else:
 				print_error(")", "ident")
+				result = None
 		else:
 			print_error("ident", "(")
+			result = None
 	return result
 
 @level_increment
 @printer
 def R2():
-	result = True
-	if binop():
-		if term():
-			result = True
+	current_tree = dict()
+	current_tree['R2'] = list()
+
+	result = list()
+
+	subtree = binop()
+	if subtree:
+		current_tree['R2'].append(subtree)
+		subtree = term()
+		if subtree:
+			current_tree['R2'].append(subtree)
+			result = current_tree
 		else:
 			print_error("term", "binop")
-			result = False
+			result = None
 	return result
 
 @level_increment
 @printer
 def R3():
-	result = False
-	if expr():
-		result = True
-	elif posint():
-		result = True
-
+	tree = dict()
+	tree['R3'] = list()
+	result = None
+	subtree = expr()
+	if subtree:
+		tree['R3'].append(subtree)
+		result = tree
+	else:
+		subtree = posint()
+		if subtree:
+			tree['R3'].append(subtree)
+			result = tree
 	return result
 
 @level_increment
 @printer
 def KEY(key):
 	if current_token is None:
-		return False
+		return None
 
 	if current_token == KEYWORDS[key]:
+		tree = dict()
+		tree['KEY'] = current_token
 		get_next_token()
-		return True
-	return False
+		return tree
+	return None
 
 
 if __name__ == "__main__":
