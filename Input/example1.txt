@@ -1,0 +1,28 @@
+		LET ZERO := 0
+		LET ONE := 1
+		LET TRUE := 1
+		LET NVALS := 7
+
+		LET K := ONE
+
+INPUT:
+		GET LIST ( K )
+		LET K := K + ONE
+		JUMP OUTPUT IF K > NVALS
+		JUMP INPUT IF TRUE
+
+OUTPUT:
+		LET K := ONE
+		PUT ' The_Output_is '
+		LINE
+
+OLOOP:
+		PUT LIST ( K )
+		LINE
+		LET K := K + ONE
+		JUMP DONE IF K > NVALS
+		JUMP OLOOP IF TRUE
+
+DONE:
+		END
+
