@@ -104,20 +104,21 @@ def runParser(tokens):
 
 
 	# Let's get it on
-	if Program():
+	tree = Program()
+	if tree:
 		logging.info("-> CHAIN IS CORRECT!!!\nNo Errors occured!")
-		return True # Все прошло нормально
+		return tree # Все прошло нормально
 	else:
 		logging.info("-> CHAIN IS WRONG!!!\nInternal Errors occured!")
 
-	return False # Есть ошибки
+	return None # Есть ошибки
 
 
 @level_increment
 @printer
 def Program():
 	key = 'Program'
-	result = False
+	result = None
 	tree_full = dict()
 	tree_full[key] = list()
 
@@ -134,7 +135,7 @@ def Program():
 	if subtree:
 		tree_full[key].append(subtree)
 		if current_token is None:
-			result = True
+			result = tree_full
 		else:
 			print_error("string end", "END")
 	else:
