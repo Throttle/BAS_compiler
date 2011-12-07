@@ -15,10 +15,15 @@ all_code = None
 def get_variable(name, index):
 	res_val = None
 	if name == "input":
-		res_val = input.next()
+		try:
+			res_val = input.next()
+		except Exception:
+			pass
 	elif not local_params.has_key(name):
 		raise Exception("Undefined variable: " + name)
 	else:
+		if local_params.has_key(index):
+			index = local_params[index][0]
 		res_val = local_params[name][index]
 	return res_val
 
@@ -31,6 +36,9 @@ def create_local_variable(res, res_ind, res_val):
 		local_params[res] = list()
 		local_params[res].append(res_val)
 		return
+
+	if local_params.has_key(res_ind):
+		res_ind = local_params[res_ind][0]
 
 	if res_ind == len(local_params[res]):
 		local_params[res].append(res_val)
@@ -71,10 +79,24 @@ def MORE(arg1, ind1, arg2, ind2, res, res_ind):
 
 
 def JUMP(arg1, ind1, arg2, ind2, res, res_ind):
-	pass
+	cmp1 = get_value(arg1, ind1)
+
+	if cmp1 == 0:
+		return
+
+	global ip, sp
+	for i in range(0, len(all_code)):
+		if all_code[i][0] == res:
+			sp = res
+			ip = i
+			break
+
 
 def PUT(arg1, ind1, arg2, ind2, res, res_ind):
-	pass
+	try:
+		print get_value(arg1, ind1)
+	except:
+		print arg1
 
 def END(arg1, ind1, arg2, ind2, res, res_ind):
 	pass
@@ -105,6 +127,5 @@ def execute(code, input_p):
 		if ip-1 == 0:
 			sp = code[ip-1][0]
 		command = code[ip-1][1]
-
 		control_table[command](code[ip-1][2], code[ip-1][3], code[ip-1][4], code[ip-1][5], code[ip-1][6], code[ip-1][7])
 	pass

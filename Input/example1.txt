@@ -1,9 +1,9 @@
 		LET ZERO := 0
 		LET ONE := 1
 		LET TRUE := 1
-		LET NVALS := 7
+		LET NVALS := 6
 
-		LET K := ONE
+		LET K := ZERO
 
 INPUT:
 		GET LIST ( K )
@@ -12,7 +12,7 @@ INPUT:
 		JUMP INPUT IF TRUE
 
 OUTPUT:
-		LET K := ONE
+		LET K := ZERO
 		PUT ' The_Output_is '
 		LINE
 
